@@ -1,0 +1,60 @@
+#!/bin/bash
+#COPYRIGHT SLN 2021 | https://github.com/EpiSlyon | V1
+
+#SETTINGS
+DATE=$(date +'%Y%m%d')
+SAVE=0
+QUIET=0
+HELP=0
+
+#TEMP DIRECTORY FOR PICTURES, PICTURES ARE STORED HERE IF YOU USE THE OPTION :D
+DIR=~/Pictures
+
+#PICTURE PRINTING COMMAND (HERE YOU HAVE TO PUT YOUR COMMAND TO PRINT PICTURES)
+CMD="kitty +kitten icat"
+
+#OPTIONS HANDLING
+while getopts "sqh" OPTION; do
+    case $OPTION in
+    s)
+        SAVE=1
+        ;;
+    q)
+        QUIET=1
+        ;;
+    h)
+        HELP=1
+        ;;
+    *)
+        echo "Incorrect options provided"
+        exit 1
+        ;;
+    esac
+done
+
+#MAIN
+if [ $HELP == 0 ]
+then
+    wget http://apod.nasa.gov/apod/ --quiet -O /tmp/apod.html
+    grep -m 1 jpg /tmp/apod.html | sed -e 's/<//' -e 's/>//' -e 's/.*=//' -e 's/"//g' -e 's/^/http:\/\/apod.nasa.gov\/apod\//' > /tmp/pic_url
+    URL=`/bin/cat /tmp/pic_url`
+    wget --quiet $URL -O $DIR/${DATE}_apod.jpg
+
+    if [ $QUIET == 0 ]
+    then
+        $CMD $DIR/${DATE}_apod.jpg
+    fi
+
+    if [ $SAVE == 0 ]
+    then
+        rm $DIR/${DATE}_apod.jpg
+    fi
+
+    rm /tmp/pic_url
+else
+    echo "Little script that will brought you NASA Astronomy Picture of the Day."
+    echo "Usage: apod [OPTIONS]"
+    echo "       -s     Save the picture."
+    echo "       -q     Don't print anything."
+    echo "       -h     Display this help menu."
+fi
